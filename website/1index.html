@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WebSocket Client</title>
+</head>
+
+<body>
+    <h1>Message for Server</h1>
+    <form>
+        <input type="text" name="inputString" />
+        <button type="button" onclick="sendMessage()">Submit</button>
+    </form>
+
+    <h1>Messages from Server</h1>
+    <p style="border-style: solid; width: 500px; border-width: 1px;" id="messages"></p>
+
+    <script>
+
+        //Create new WebSocket object
+        var connection = new WebSocket("wss://my7wifjiu7.execute-api.us-east-1.amazonaws.com/dev");
+        // ws://localhost:8080");
+
+        //Handle open connection event
+        connection.onopen = function (event) {
+            console.log("Connected: " + JSON.stringify(event));
+        };
+
+        //Output messages from the server
+        connection.onmessage = function (msg) {
+            document.getElementById("messages").innerHTML += ("Server message: " + msg.data + "<br />");
+        };
+
+        //Log errors
+        connection.onerror = function (error) {
+            console.log("WebSocket Error: " + JSON.stringify(error));
+        };
+
+        //Send message to server
+        function sendMessage() {
+            var msgText = document.forms[0].inputString.value;
+            connection.send(msgText);
+            console.log("Message sent: " + msgText);
+        }
+
+    </script>
+</body>
+
+</html>

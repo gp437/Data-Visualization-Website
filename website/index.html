@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- aws sdk -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.661.0.min.js"></script>
+    <!-- plotly -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- mapbox -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v1.9.0/mapbox-gl.js"></script>
+    <!-- mapbox -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v1.9.0/mapbox-gl.css" rel="stylesheet" />
+    <style>
+        .parallax {
+            /* The background image */
+            background-image: url("https://live.staticflickr.com/1669/26663796685_47118318d2_b.jpg");
+
+
+            /* Set a specific height */
+            min-height: 600px;
+
+            /* Create the parallax scrolling effect */
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .div1 {
+            background-color: #6fd6f5;
+            /* opacity: 1; */
+            filter: alpha(opacity=60);
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+    <div class="parallax">
+        <div style="text-align: center; padding-top: 10%;">
+            <h1 style=" text-align: center; color: aliceblue;">London House Prices</h1>
+
+        </div>
+
+
+    </div>
+    <div>
+        <img width="350px" margin="50" style="margin-left:  40%;"
+            src="https://cdn.dribbble.com/users/30976/screenshots/2217776/horsensleksikon-animation.gif" alt="">
+    </div>
+    <!-- Create DIVs to hold the charts -->
+    <div id="chartDiv" style="width:1200px;height:600px;"></div>
+    <div id="myDiv" style="width:1200px;height:600px;"></div>
+
+    <!-- graph for syntethic data -->
+
+    <div style="background-color:  black;">
+        <h1 style=" text-align: center; color: white;">Synthetic data graph</h1>
+        <a href="https://plotly.com/~pislargabriel27/0/?share_key=8LR5QOIBCzkWnwRAW1zdl1" target="_blank"
+            title="date-axes" style="display: block; text-align: center;"><img
+                src="https://plotly.com/~pislargabriel27/0.png?share_key=8LR5QOIBCzkWnwRAW1zdl1" alt="date-axes"
+                style="max-width: 100%;width: 600px;" width="600"
+                onerror="this.onerror=null;this.src='https://plotly.com/404.png';" /></a>
+        <script data-plotly="pislargabriel27:0" sharekey-plotly="8LR5QOIBCzkWnwRAW1zdl1"
+            src="https://plotly.com/embed.js" async></script>
+    </div>
+
+
+    <!-- sentiment graph -->
+    <div id='map' style='width: 1000px; height: 600px;'></div>
+
+    <!-- numerical button graph -->
+    <!-- <h1>Message for Server</h1> -->
+    <!-- <form> -->
+    <!-- <input type="text" name="inputString" /> -->
+    <button type="button" onclick="sendMessage()">Refresh Graph</button>
+    <!-- </form> -->
+
+    <!-- <h1>Messages from Server</h1> -->
+    <p style="border-style: solid; width: 500px; border-width: 1px;" id="messages"></p>
+
+    <script>
+        let NumericalData = [];
+        // websockets
+        var connection = new WebSocket("wss://my7wifjiu7.execute-api.us-east-1.amazonaws.com/dev");
+        // var connection = new WebSocket("ws://localhost:8080");
+
+
+
+        connection.onopen = function (event) {
+            console.log("Connected: " + JSON.stringify(event));
+            setTimeout(function () { sendMessage(); }, 500);
+            // console.log("NUMERIC LENGTH:" + NumericalData.length);
+        };
+        setTimeout(function () { sendMessage(); }, 500);
+        //Send message to server
+        function sendMessage() {
+            var msgText = "Refresh Graph"
+            // document.forms[0].inputString.value;
+
+            //Create message to be sent to server
+            var msgObject = {
+                action: "sendMessage",
+                data: msgText
+            };
+
+            //Send message object
+            connection.send(JSON.stringify(msgObject));
+
+            //Log result
+            console.log("Message sent: " + JSON.stringify(msgObject));
+        }
+        let ArrayD = [];
+        //Output messages from the server
+        connection.onmessage = function (msg) {
+            document.getElementById("messages").innerHTML += ("Server message: " + msg.data + "<br />");
+            console.log("NumericalData received" + msg.data);
+            NumericalData = JSON.parse(msg.data);
+
+            ArrayD = JSON.parse(msg.data);
+            NumGraph();
+        }
+
+        //Log errors
+        connection.onerror = function (error) {
+            console.log("WebSocket Error: " + JSON.stringify(error));
+        }
+        // end of websockets
+
+        function Check() {
+            if (NumericalData.length == 0) {
+                setTimeout(function () { sendMessage(); }, 3000);
+            }
+        }
+        Check();
+
+
+
+
+        // numerical graph starts here
+        // organising data by borough
+        function NumGraph() {
+            // let NumericalData = [xyz];
+            // console.log(NumericalData.length);
+            let barking = [];
+            let barkingPrice = [];
+            let barkingDate = [];
+            for (let x = 0; x < NumericalData.length; x++) {
+                // console.log((NumericalData[x] == "Barking & Dagenham"));
+                if (NumericalData[x] == "Barking & Dagenham") {
+                    barking.push(NumericalData[x]);
+                    barkingPrice.push(NumericalData[x + 1]);
+                    barkingDate.push(NumericalData[x + 2]);
+                }
+            };
+            let barnet = [];
+            let barnetPrice = [];
+            let barnetDate = [];
+            for (let x = 0; x < NumericalData.length; x++) {
+                if (NumericalData[x] == "Barnet") {
+                    barnet.push(NumericalData[x]);
+                    barnetPrice.push(NumericalData[x + 1]);
+                    barnetDate.push(NumericalData[x + 2]);
+                }
+            };
+            let bexley = [];
+            let bexleyPrice = [];
+            let bexleyDate = [];
+            for (let x = 0; x < NumericalData.length; x++) {
+                if (NumericalData[x] == "Bexley") {
+                    bexley.push(NumericalData[x]);
+                    bexleyPrice.push(NumericalData[x + 1]);
+                    bexleyDate.push(NumericalData[x + 2]);
+                }
+            };
+            let brent = [];
+            let brentPrice = [];
+            let brentDate = [];
+            for (let x = 0; x < NumericalData.length; x++) {
+                if (NumericalData[x] == "Brent") {
+                    brent.push(NumericalData[x]);
+                    brentPrice.push(NumericalData[x + 1]);
+                    brentDate.push(NumericalData[x + 2]);
+                }
+            };
+            let cityLondon = [];
+            let cityLondonPrice = [];
+            let cityLondonDate = [];
+            for (let x = 0; x < NumericalData.length; x++) {
+                if (NumericalData[x] == "City of London") {
+                    cityLondon.push(NumericalData[x]);
+                    cityLondonPrice.push(NumericalData[x + 1]);
+                    cityLondonDate.push(NumericalData[x + 2]);
+                }
+            };
+
+
+            //Data set details. Each trace corresponds to one line or set of points.
+            let trace1 = {
+                y: barkingPrice, barkingDate,
+                x: barkingDate, barkingPrice,
+                mode: 'markers',
+                name: "Barking & Dagenham",
+                marker: {
+                    color: 'rgb(29, 64, 82)',
+                    size: 12
+                }
+            };
+            let trace2 = {
+                y: cityLondonPrice, cityLondonDate,
+                x: cityLondonDate, cityLondonPrice,
+                mode: 'markers',
+                name: "City of London",
+                marker: {
+                    color: 'rgb(255,165,0)',
+                    size: 12
+                }
+            };
+            let trace3 = {
+                y: barnetPrice, barnetDate,
+                x: barnetDate, barnetPrice,
+                mode: 'markers',
+                name: "Barnet",
+                marker: {
+                    color: 'rgb(0,0,255)',
+                    size: 12
+                }
+            };
+            let trace4 = {
+                y: bexleyPrice, bexleyDate,
+                x: bexleyDate, bexleyPrice,
+                mode: 'markers',
+                name: "Bexley",
+                marker: {
+                    color: 'rgb(255,0,255)',
+                    size: 12
+                }
+            };
+            let trace5 = {
+                y: brentPrice, brentDate,
+                x: brentDate, brentPrice,
+                mode: 'markers',
+                name: "Brent",
+                marker: {
+                    color: 'rgb(0,128,0)',
+                    size: 12
+                }
+            };
+
+            //Complete data set for graph
+            let data = [trace1, trace2, trace3, trace4, trace5];
+
+            //Specify title and axis labels
+            let layout = {
+                title: 'Average House Price Graph',
+                xaxis: {
+                    title: 'Date'
+                },
+                yaxis: {
+                    title: 'Price'
+                }
+            };
+
+            //Draw graph
+            Plotly.newPlot('chartDiv', data, layout);
+
+        }
+
+    </script>
+    <!-- end graph and webs -->
+</body>
+
+</html>
